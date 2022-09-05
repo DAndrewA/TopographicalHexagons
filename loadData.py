@@ -58,7 +58,7 @@ def load_asc_format(direc,filename):
         f.close()
         
         # as we don't have bathymetry data, I will set all NODATA areas to 0
-        dataArr[dataArr == NDval] = -300 #NDval
+        dataArr[dataArr == NDval] = -10 #NDval
         return dataArr,metadata
         
     except Exception as err:
@@ -126,3 +126,22 @@ D_combined = D_combined[:,1:]
 newD = downsample_minimum(D_combined)
 plt.imshow(newD,origin='lower',interpolation='bilinear')
 #plt.imshow(D_combined,origin='lower',interpolation='bilinear')
+
+newD = downsample_minimum(newD)
+newD = downsample_minimum(newD)
+
+#rescaling the heightmap by a function to exagerate lower elevations more
+k = 10
+#w = lambda x: np.log(x)*k
+#w = lambda x: np.sqrt(x)*k
+w = lambda x: x/20
+newD[newD > 0] = w(newD[newD > 0])
+
+# 3D surface plot
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+x,y = range(np.size(newD,1)), range(np.size(newD,0))
+X,Y = np.meshgrid(x,y)
+ax.plot_surface(X,Y,newD,rcount=150,ccount=300)
+plt.show()
