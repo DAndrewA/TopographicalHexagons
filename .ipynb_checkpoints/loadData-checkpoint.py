@@ -67,12 +67,13 @@ def load_asc_format(direc,filename,seaVal=0):
     
   
 
-'''
-This function is to downsample a matrix by the minimum factor whilst maintaining the original aspect ratio.
-Significant improvements have been made to speed by utilising the meshgrid method rather than nested for loops to get the spaced values.
-'''
+
 def downsample_minimum(D):
-    # extract the prime factors from the matrix dimensions 
+    '''
+    This function is to downsample an n*m matrix D by their lowest common denominator for the dimensions
+    This is done to maintain the aspect ratio of the downsampled matrix.
+    '''
+    # extract the prime factors from the 
     x = np.size(D,0)
     y = np.size(D,1)
     
@@ -84,15 +85,65 @@ def downsample_minimum(D):
             if f == g and f < lcd:
                 lcd = f
     if lcd != x*y: # if the two numbers are not coprime
-        x = range(0,int(x/lcd))#*lcd
-        y = range(0,int(y/lcd))#*lcd
+        newx = int(x/lcd)
+        newy = int(y/lcd)
+        print([newx,newy])
+        newD = np.zeros([newx,newy])
         
-        X,Y = np.meshgrid(x,y)
-        newD = D[X*lcd,Y*lcd]
+        for i in range(0,newx):
+            for j in range(0,newy):
+                newD[i,j] = D[i*lcd,j*lcd]
     
-        print('newD created, size is ({},{})'.format(np.size(newD,0),np.size(newD,1)))
         return newD
     else:
         print('Dimensions are coprime. Cannot downsample and maintain aspect ratio.')
-        return D
+        return
     
+    
+    
+
+'''
+# example use of code
+
+direc = 'data\\srtm_36_04\\' # use of \\ is to avoid escape character in filepath
+filename = 'srtm_36_04.asc'
+
+D,m = load_asc_format(direc,filename)
+plt.contour(D,10)
+''' 
+
+'''
+D_combined = np.ones([6000,1]) * -300
+for j in [35,36]:
+    direc = 'data\\srtm_' + str(j) + '_04\\' # use of \\ is to avoid escape character in filepath
+    filename = 'srtm_' + str(j) + '_04.asc'
+
+    D,m = load_asc_format(direc, filename)
+    plt.imshow(D,origin='lower',interpolation='bilinear')
+    
+    D_combined = np.hstack((D_combined,D))
+    
+D_combined = D_combined[:,1:]
+newD = downsample_minimum(D_combined)
+plt.imshow(newD,origin='lower',interpolation='bilinear')
+#plt.imshow(D_combined,origin='lower',interpolation='bilinear')
+
+newD = downsample_minimum(newD)
+newD = downsample_minimum(newD)
+
+#rescaling the heightmap by a function to exagerate lower elevations more
+k = 10
+#w = lambda x: np.log(x)*k
+#w = lambda x: np.sqrt(x)*k
+w = lambda x: x/20
+newD[newD > 0] = w(newD[newD > 0])
+
+# 3D surface plot
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+x,y = range(np.size(newD,1)), range(np.size(newD,0))
+X,Y = np.meshgrid(x,y)
+ax.plot_surface(X,Y,newD,rcount=150,ccount=300)
+plt.show()
+'''
