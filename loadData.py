@@ -8,11 +8,10 @@ Will load in the datasets into a desired grid-like format.
 """
 
 import numpy as np
-import matplotlib.pyplot as py
+import matplotlib.pyplot as plt
+import primefac as primefac
 
 
-direc = 'data\\srtm_35_04\\' # use of \\ is to avoid escape character in filepath
-filename = 'srtm_35_04.asc'
 
 '''
 This is the function to load in the .asc file format provided by the SRTM dataset.
@@ -49,7 +48,7 @@ def load_asc_format(direc,filename):
         lineIndex = 0
         while True:
             lineData = [int(n) for n in line.split()]
-            dataArr[lineIndex,:] = lineData
+            dataArr[nrows-lineIndex-1,:] = lineData
             
             line = f.readline()
             lineIndex += 1
@@ -59,7 +58,7 @@ def load_asc_format(direc,filename):
         f.close()
         
         # as we don't have bathymetry data, I will set all NODATA areas to 0
-        dataArr[dataArr == NDval] = 0
+        dataArr[dataArr == NDval] = -300 #NDval
         return dataArr,metadata
         
     except Exception as err:
@@ -67,8 +66,63 @@ def load_asc_format(direc,filename):
         raise(err)
     
     
+
+
+def downsample_minimum(D):
+    '''
+    This function is to downsample an n*m matrix D by their lowest common denominator for the dimensions
+    This is done to maintain the aspect ratio of the downsampled matrix.
+    '''
+    # extract the prime factors from the 
+    x = np.size(D,0)
+    y = np.size(D,1)
+    
+    pfacX = primefac.primefac(x)
+    pfacY = primefac.primefac(y)
+    lcd = x*y
+    for f in pfacX:
+        for g in pfacY:
+            if f == g and f < lcd:
+                lcd = f
+    if lcd != x*y: # if the two numbers are not coprime
+        newx = int(x/lcd)
+        newy = int(y/lcd)
+        print([newx,newy])
+        newD = np.zeros([newx,newy])
+        
+        for i in range(0,newx):
+            for j in range(0,newy):
+                newD[i,j] = D[i*lcd,j*lcd]
+    
+        return newD
+    else:
+        print('Dimensions are coprime. Cannot downsample and maintain aspect ratio.')
+        return
+    
+    
+    
+
 '''
 # example use of code
+
+direc = 'data\\srtm_36_04\\' # use of \\ is to avoid escape character in filepath
+filename = 'srtm_36_04.asc'
+
 D,m = load_asc_format(direc,filename)
-py.contour(D,10)
+plt.contour(D,10)
 ''' 
+
+D_combined = np.ones([6000,1]) * -300
+for j in [35,36]:
+    direc = 'data\\srtm_' + str(j) + '_04\\' # use of \\ is to avoid escape character in filepath
+    filename = 'srtm_' + str(j) + '_04.asc'
+
+    D,m = load_asc_format(direc, filename)
+    plt.imshow(D,origin='lower',interpolation='bilinear')
+    
+    D_combined = np.hstack((D_combined,D))
+    
+D_combined = D_combined[:,1:]
+newD = downsample_minimum(D_combined)
+plt.imshow(newD,origin='lower',interpolation='bilinear')
+#plt.imshow(D_combined,origin='lower',interpolation='bilinear')
