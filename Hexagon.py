@@ -31,6 +31,12 @@ class Hexagon:
     a5 = -a2
     unitVertices = np.stack((a0,a1,a2,a3,a4,a5),1) # stack along the second-matrix-axis direction. This allows for rotation matrices later
     
+    # creation of unit normals
+    n0 = np.array([ 1 , 0 ])
+    n1 = np.array([ 1/2 , np.sqrt(3)/2 ])
+    n2 = np.array([ -1/2 , np.sqrt(3)/2 ])
+    unitNormals = np.stack((n0,n1,n2),1)
+    
     def __init__(self,scale=1,rotation=0,centre=[0,0]):
         '''
         INPUTS:
@@ -58,7 +64,9 @@ class Hexagon:
     def placeHexagon(self):
         '''
         Function to transform the unitVertices into coordinates for the vertices of the hexagon
+        Will also rotate and scale the face normals
         '''
+        self.normals = np.matmul(self.rotM(),self.unitNormals)
         return np.reshape(self.centre,(2,1)) + np.matmul(self.rotM(),self.unitVertices)*self.scale
         
     
@@ -74,6 +82,48 @@ class Hexagon:
         newCentre = self.centre + np.matmul(self.rotM(), centreDisplacement)*self.scale
         
         return Hexagon(self.scale,self.rotation,newCentre)
+
+    def insideHexagon(self,X,Y):
+        '''
+        Function that will return a boolean mask of shape shape(X) (and Y) based on if the points are within the hexagon
+        INPUTS:
+            X: nxm array, meshgrid of X coordinates
+            Y: nxm array, meshgrid of Y coordinates
+        '''
+        if np.shape(X) != np.shape(Y):
+            print('Shapes of X and Y do not match.')
+            return None
+        
+        # initially, recentre the coordinates on the hexagon
+        X = X - self.centre[0]
+        Y = Y - self.centre[1]
+        
+        mask = np.zeros(np.shape(X))
+        additive = np.ones(np.shape(X))
+        
+        for i in [0,1,2]: # for each normal (i)
+            #compute the absolute dot product of each coordinate position with the normal vector
+            Dot = np.abs(X * self.unitNormals[0,i] + Y * self.unitNormals[1,i])
+            # if the dot product is less than sqrt(3)a/2 then its within the hexagon, add one
+            mask[ Dot <= (np.sqrt(3)/2 * self.scale) ] += 1
+            
+        # if the mask value is 3, it is within the hexagon for all normals, renormalise
+        mask[mask < 3] = 0
+        mask[mask == 3] = 1
+        return mask
+    
+    def outsideHexagon(self,X,Y):
+        '''
+        Function that will return a boolean mask which is true for points outside the hexagon.
+        '''
+        if np.shape(X) != np.shape(Y):
+            print('Shapes of X and Y do not match.')
+            return None
+        
+        mask = np.ones(np.shape(X))
+        return mask - self.outsideHexagon(X, Y)
+        
+        
 
 '''
 # testing that the creation of the same hexagon via different routes does give the same centres
