@@ -16,20 +16,30 @@ class CoordinateTransform:
     
     Between Irun and Santiago De Compostella, this assumption results in a change of distances of ~0.4%, which I deem to be an acceptable distortion.
     '''
-    def __init__(self,ref1Img=[0,0],ref1Coords=[0,0],scale=None,ref2Img=None,ref2Coords=None):
+    def __init__(self,ref1Img=[0,0],ref1Coords=[0,0],scale=None,ref2Img=None,ref2Coords=None,metadata=None):
         '''
         INPUTS:
             ref1Img: 2x1 array, pixel position of known refernce point in image
-            ref1Coords: 2x1 array, geo-coordinates (lat,long) for the reference location
+            ref1Coords: 2x1 array, geo-coordinates (long,lat) for the reference location
             
             scale: 2x1 array, first element is the x-scale (angle per pixel) and second element is y-scale (angle per pixel)
         
             ref2Img: 2x1 array, elements are position coordinates
-            ref2Coords: 2x1 array, elements corresponding to (lat.,long.) associated with position in ref2Img
+            ref2Coords: 2x1 array, elements corresponding to (long,lat) associated with position in ref2Img
+        
+            metadata: 3x1 array, the metadata output from loadData()
         '''
         # convert input references to numpy vectors
         ref1Img = np.array(ref1Img)
         ref1Coords = np.array(ref1Coords)
+        
+        '''#NOTE, the cellsize parameter in the SRTM data isn't the angular extent in one direction of the cell.
+        if metadata: # if the metadata from the SRTM dataset is provided
+            angle = metadata[2] * 180 / np.pi
+            self.scale = np.array([ angle , angle ])
+            self.originCoords = np.array([ metadata[0] , metadata[1] ])
+            return
+        '''
         
         if scale:
             # the reference point for the Transform will be the origin in image space

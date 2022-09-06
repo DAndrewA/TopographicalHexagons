@@ -39,7 +39,7 @@ def load_asc_format(direc,filename,seaVal=0):
             else:
                 break # if none of the variables are being entered, we have reached the data.
         
-        metadata = [xll,yll,cellsize]
+        metadata = [xll,yll,cellsize] # long,lat,scale
         #We have now reached the first line with data in it.
         # initialising numpy arrays
         dataArr = np.zeros([ncols,nrows])
@@ -91,8 +91,8 @@ def downsample_minimum(D):
         newD = D[X*lcd,Y*lcd]
     
         print('newD created, size is ({},{})'.format(np.size(newD,0),np.size(newD,1)))
-        return newD
+        return newD,lcd
     else:
         print('Dimensions are coprime. Cannot downsample and maintain aspect ratio.')
-        return D
+        return D,1
     

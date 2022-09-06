@@ -99,17 +99,17 @@ class Hexagon:
         Y = Y - self.centre[1]
         
         mask = np.zeros(np.shape(X))
-        additive = np.ones(np.shape(X))
         
         for i in [0,1,2]: # for each normal (i)
             #compute the absolute dot product of each coordinate position with the normal vector
-            Dot = np.abs(X * self.unitNormals[0,i] + Y * self.unitNormals[1,i])
+            Dot = np.abs(X * self.normals[0,i] + Y * self.normals[1,i])
             # if the dot product is less than sqrt(3)a/2 then its within the hexagon, add one
             mask[ Dot <= (np.sqrt(3)/2 * self.scale) ] += 1
             
         # if the mask value is 3, it is within the hexagon for all normals, renormalise
         mask[mask < 3] = 0
         mask[mask == 3] = 1
+        mask = np.array(mask, dtype=bool)
         return mask
     
     def outsideHexagon(self,X,Y):
@@ -121,7 +121,7 @@ class Hexagon:
             return None
         
         mask = np.ones(np.shape(X))
-        return mask - self.outsideHexagon(X, Y)
+        return np.array(mask - self.insideHexagon(X, Y), dtype=bool)
         
         
 
