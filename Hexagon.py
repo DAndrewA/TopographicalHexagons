@@ -50,6 +50,9 @@ class Hexagon:
         
         # generate the vertices for the hexagon based upon the given information
         self.vertices = self.placeHexagon()
+        print('--------------------')
+        print(self.centre)
+        print(self.vertices)
        
     def rotM(self):
         '''
@@ -66,8 +69,9 @@ class Hexagon:
         Function to transform the unitVertices into coordinates for the vertices of the hexagon
         Will also rotate and scale the face normals
         '''
-        self.normals = np.matmul(self.rotM(),self.unitNormals)
-        return np.reshape(self.centre,(2,1)) + np.matmul(self.rotM(),self.unitVertices)*self.scale
+        R = self.rotM()
+        self.normals = np.matmul(R,self.unitNormals)
+        return np.matmul(R,self.unitVertices)*self.scale + np.reshape(self.centre,(2,1))
         
     
     def createAdjacentHexagon(self,face=0):

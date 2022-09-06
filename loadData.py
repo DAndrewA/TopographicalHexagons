@@ -73,8 +73,8 @@ Significant improvements have been made to speed by utilising the meshgrid metho
 '''
 def downsample_minimum(D):
     # extract the prime factors from the matrix dimensions 
-    x = np.size(D,0)
-    y = np.size(D,1)
+    x = np.size(D,1)
+    y = np.size(D,0)
     
     pfacX = primefac.primefac(x)
     pfacY = primefac.primefac(y)
@@ -88,7 +88,7 @@ def downsample_minimum(D):
         y = range(0,int(y/lcd))#*lcd
         
         X,Y = np.meshgrid(x,y)
-        newD = D[X*lcd,Y*lcd]
+        newD = D[Y*lcd,X*lcd]
     
         print('newD created, size is ({},{})'.format(np.size(newD,0),np.size(newD,1)))
         return newD,lcd

@@ -33,13 +33,13 @@ class CoordinateTransform:
         ref1Img = np.array(ref1Img)
         ref1Coords = np.array(ref1Coords)
         
-        '''#NOTE, the cellsize parameter in the SRTM data isn't the angular extent in one direction of the cell.
+        #NOTE, the cellsize parameter in the SRTM data isn't the angular extent in one direction of the cell.
         if metadata: # if the metadata from the SRTM dataset is provided
-            angle = metadata[2] * 180 / np.pi
+            angle = metadata[2] # angle is given in degrees for the 90m resolution dataset
             self.scale = np.array([ angle , angle ])
             self.originCoords = np.array([ metadata[0] , metadata[1] ])
             return
-        '''
+        
         
         if scale:
             # the reference point for the Transform will be the origin in image space
@@ -65,14 +65,19 @@ class CoordinateTransform:
     def coords2Img(self,coords=None):
         '''function to convert from geo-coordinates to image coordinates
         INPUTS:
-            coords: 2x1 array, (lat,long) of position to convert
+            coords: 2x1 array, (long,lat) of position to convert
         '''
         if coords:
             coords = np.array(coords)
             
             deltaCoords = coords - self.originCoords
-            
+            print('originCoords: {}'.format(self.originCoords))
+            print('coords: {}'.format(coords))
+            print('deltaCoords: {}'.format(deltaCoords))
+            print('scale: {}'.format(self.scale))
             deltaImg = deltaCoords/self.scale
+            print('deltaImg: {}'.format(deltaImg))
+            print('------------------------')
             return deltaImg
         else:
             print('No geo-coordinates given.')
