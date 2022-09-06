@@ -48,7 +48,7 @@ def load_asc_format(direc,filename,seaVal=0):
         lineIndex = 0
         while True:
             lineData = [int(n) for n in line.split()]
-            dataArr[nrows-lineIndex-1,:] = lineData
+            dataArr[nrows-lineIndex-1,:] = lineData #data in inverse-order to get increasing y as going North
             
             line = f.readline()
             lineIndex += 1

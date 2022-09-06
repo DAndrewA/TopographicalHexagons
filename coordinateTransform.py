@@ -8,7 +8,7 @@ File to deal with the coordinate transforms required for dealing with the hexago
 """
 import numpy as np
 
-class coordinateTransform:
+class CoordinateTransform:
     '''
     This class will be able to handle transformations for geocoordinates to image coordinate space.
     It will be initiated with either a reference point and a scale or two reference points.
