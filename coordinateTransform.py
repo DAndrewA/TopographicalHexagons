@@ -30,36 +30,37 @@ class CoordinateTransform:
             metadata: 3x1 array, the metadata output from loadData()
         '''
         # convert input references to numpy vectors
-        ref1Img = np.array(ref1Img)
-        ref1Coords = np.array(ref1Coords)
+        ref1Img = np.array(ref1Img).reshape((2,1))
+        ref1Coords = np.array(ref1Coords).reshape((2,1))
         
         #NOTE, the cellsize parameter in the SRTM data isn't the angular extent in one direction of the cell.
         if metadata: # if the metadata from the SRTM dataset is provided
             angle = metadata[2] # angle is given in degrees for the 90m resolution dataset
-            self.scale = np.array([ angle , angle ])
-            self.originCoords = np.array([ metadata[0] , metadata[1] ])
+            scale = np.array([ angle , angle ]).reshape((2,1))# reshapes as a collumn vector
+            originCoords = np.array([ metadata[0] , metadata[1] ]).reshape((2,1))# reshapes as a collumn vector
             return
         
         
         if scale:
             # the reference point for the Transform will be the origin in image space
             # Need to determine the geo-coordinates at the image origin
-            self.scale = np.array(scale) # transform into np.array vector, multiplication is element-wise
+            scale = np.array(scale).reshape(2,1) # transform into np.array vector, multiplication is element-wise
             
         elif ref2Img and ref2Coords:
-            ref2Img = np.array(ref2Img)
-            ref2Coords = np.array(ref2Coords)
+            ref2Img = np.array(ref2Img).reshape((2,1))
+            ref2Coords = np.array(ref2Coords).reshape(2,1)
             
             deltaImg = ref2Img - ref1Img
             deltaCoords = ref2Coords - ref1Coords
             
-            self.scale = deltaCoords/deltaImg #in units of angle/pixel by definition
-            
+            scale = deltaCoords/deltaImg #in units of angle/pixel by definition
         else:
             print('No second reference or scale given as keyword argument')
             return None
         
-        self.originCoords = ref1Coords - (self.scale * ref1Img)
+        self.scale = scale # reshape as collumn vectors for use in multiple coordinate conversions
+        originCoords = ref1Coords - (self.scale * ref1Img)
+        self.originCoords = np.reshape(originCoords,(2,1))
         
     
     def coords2Img(self,coords=None):
@@ -67,7 +68,7 @@ class CoordinateTransform:
         INPUTS:
             coords: 2x1 array, (long,lat) of position to convert
         '''
-        if coords:
+        if coords is not None:
             coords = np.array(coords)
             
             deltaCoords = coords - self.originCoords
@@ -88,7 +89,7 @@ class CoordinateTransform:
         INPUTS:
             img: 2x1 array, image coordinates for point in image.
         '''
-        if img:
+        if img is not None:
             img = np.array(img)
             
             coords = self.originCoords + img*self.scale

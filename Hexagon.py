@@ -80,7 +80,7 @@ class Hexagon:
         The centre of the hexagon is determined by the chosen face.
         '''
         
-        vectorPair = [face,(face+1)%6] # modulo to acocunt for face 5 having vertex 5 pairing with 0
+        vectorPair = [face%6,(face+1)%6] # modulo to acocunt for face 5 having vertex 5 pairing with 0
         centreDisplacement = self.unitVertices[:,vectorPair[0]] + self.unitVertices[:,vectorPair[1]]
         
         newCentre = self.centre + np.matmul(self.rotM(), centreDisplacement)*self.scale

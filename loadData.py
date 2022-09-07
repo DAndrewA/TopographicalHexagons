@@ -96,3 +96,50 @@ def downsample_minimum(D):
         print('Dimensions are coprime. Cannot downsample and maintain aspect ratio.')
         return D,1
     
+    
+    
+def load_coordinate_list(direc,filename,commentChar='#'):
+    '''
+    A function for loading in the self-designated coordinate list file I'm creating.
+    The file consists of comments, lines beginining with '#', blank lines (to be ignored)
+    and pairs of lines, one starting with a '.' that denotes a place name, and the next
+    line being a pair of (lat,long) coordinates.
+    '''
+    names = []
+    coords = []
+    f = open(direc + filename,'r')
+    try:
+        while True: # will go through the whole file, line by line
+            line = f.readline()
+            # do nothing if the line is blank or a comment
+            if line == '\n':
+                pass
+                print('blankline - pass')
+            elif not line: # if none of the above conditions are met we should be at the end of the file
+                print('breakline: {}'.format(line))
+                break
+            elif line[0] == commentChar: 
+                pass
+                print('commentline - pass')
+            # otherwise, we should be at a line begining with a '.'
+            elif line[0] == '.':
+                # get the current name and coords, converting into the order (long,lat)
+                cName = line[1:]
+                line = f.readline().split(',')
+                cCoords = [ float(line[1]) , float(line[0]) ]
+                print('cName: {}'.format(cName))
+                print('cCoords: {}'.format(cCoords))
+                names.append(cName)
+                coords.append(cCoords)
+            
+            
+        # convert the coordinates into horizontally stacked collumn vectors
+        coords = np.array(coords)
+        coords = np.transpose(coords)
+        return coords,names
+        
+    except Exception as err:
+        f.close()
+        print('FILE CLOSED')
+        raise(err)
+        
