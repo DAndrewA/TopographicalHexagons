@@ -22,20 +22,20 @@ class Hexagon:
     It will also have methods to place the hexagon in coordinate space given these values, as well as create a new adjacent hexagon off a given face.
     '''
     
-    # creation of the unit vectors 
-    a0 = np.array([ np.sqrt(3)/2 , -1/2 ])
-    a1 = np.array([ np.sqrt(3)/2 , 1/2 ])
-    a2 = np.array([ 0 , 1 ])
+    # creation of the unit vectors, reshaped to be collumn vectors
+    a0 = np.array([ np.sqrt(3)/2 , -1/2 ]).reshape((2,1))
+    a1 = np.array([ np.sqrt(3)/2 , 1/2 ]).reshape((2,1))
+    a2 = np.array([ 0 , 1 ]).reshape((2,1))
     a3 = -a0
     a4 = -a1
     a5 = -a2
-    unitVertices = np.stack((a0,a1,a2,a3,a4,a5),1) # stack along the second-matrix-axis direction. This allows for rotation matrices later
+    unitVertices = np.stack((a0,a1,a2,a3,a4,a5),1).reshape((2,6)) # stack along the second-matrix-axis direction. This allows for rotation matrices later
     
     # creation of unit normals
-    n0 = np.array([ 1 , 0 ])
-    n1 = np.array([ 1/2 , np.sqrt(3)/2 ])
-    n2 = np.array([ -1/2 , np.sqrt(3)/2 ])
-    unitNormals = np.stack((n0,n1,n2),1)
+    n0 = np.array([ 1 , 0 ]).reshape((2,1))
+    n1 = np.array([ 1/2 , np.sqrt(3)/2 ]).reshape((2,1))
+    n2 = np.array([ -1/2 , np.sqrt(3)/2 ]).reshape((2,1))
+    unitNormals = np.stack((n0,n1,n2),1).reshape((2,3))
     
     def __init__(self,scale=1,rotation=0,centre=[0,0]):
         '''
@@ -46,13 +46,16 @@ class Hexagon:
         '''
         self.scale = scale
         self.rotation = rotation
-        self.centre = np.array(centre)
-        
+        try:
+            self.centre = np.array(centre).reshape((2,1))
+        except Exception as err:
+            print('Exception thrown in reshaping centre (line 50?)')
+            print(centre)
+            print(np.size(centre))
+            print(np.shape(centre))
+            raise err
         # generate the vertices for the hexagon based upon the given information
         self.vertices = self.placeHexagon()
-        print('--------------------')
-        print(self.centre)
-        print(self.vertices)
        
     def rotM(self):
         '''
@@ -71,7 +74,7 @@ class Hexagon:
         '''
         R = self.rotM()
         self.normals = np.matmul(R,self.unitNormals)
-        return np.matmul(R,self.unitVertices)*self.scale + np.reshape(self.centre,(2,1))
+        return np.matmul(R,self.unitVertices)*self.scale + self.centre
         
     
     def createAdjacentHexagon(self,face=0):

@@ -36,8 +36,8 @@ class CoordinateTransform:
         #NOTE, the cellsize parameter in the SRTM data isn't the angular extent in one direction of the cell.
         if metadata: # if the metadata from the SRTM dataset is provided
             angle = metadata[2] # angle is given in degrees for the 90m resolution dataset
-            scale = np.array([ angle , angle ]).reshape((2,1))# reshapes as a collumn vector
-            originCoords = np.array([ metadata[0] , metadata[1] ]).reshape((2,1))# reshapes as a collumn vector
+            self.scale = np.array([ angle , angle ]).reshape((2,1))# reshapes as a collumn vector
+            self.originCoords = np.array([ metadata[0] , metadata[1] ]).reshape((2,1))# reshapes as a collumn vector
             return
         
         
@@ -72,13 +72,7 @@ class CoordinateTransform:
             coords = np.array(coords)
             
             deltaCoords = coords - self.originCoords
-            print('originCoords: {}'.format(self.originCoords))
-            print('coords: {}'.format(coords))
-            print('deltaCoords: {}'.format(deltaCoords))
-            print('scale: {}'.format(self.scale))
             deltaImg = deltaCoords/self.scale
-            print('deltaImg: {}'.format(deltaImg))
-            print('------------------------')
             return deltaImg
         else:
             print('No geo-coordinates given.')
