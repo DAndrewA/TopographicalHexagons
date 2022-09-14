@@ -114,21 +114,21 @@ def load_coordinate_list(direc,filename,commentChar='#'):
             # do nothing if the line is blank or a comment
             if line == '\n':
                 pass
-                print('blankline - pass')
+                #print('blankline - pass')
             elif not line: # if none of the above conditions are met we should be at the end of the file
-                print('breakline: {}'.format(line))
+                #print('breakline: {}'.format(line))
                 break
             elif line[0] == commentChar: 
                 pass
-                print('commentline - pass')
+                #print('commentline - pass')
             # otherwise, we should be at a line begining with a '.'
             elif line[0] == '.':
                 # get the current name and coords, converting into the order (long,lat)
                 cName = line[1:]
                 line = f.readline().split(',')
                 cCoords = [ float(line[1]) , float(line[0]) ]
-                print('cName: {}'.format(cName))
-                print('cCoords: {}'.format(cCoords))
+                #print('cName: {}'.format(cName))
+                #print('cCoords: {}'.format(cCoords))
                 names.append(cName)
                 coords.append(cCoords)
             

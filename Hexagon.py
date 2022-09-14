@@ -37,7 +37,7 @@ class Hexagon:
     n2 = np.array([ -1/2 , np.sqrt(3)/2 ]).reshape((2,1))
     unitNormals = np.stack((n0,n1,n2),1).reshape((2,3))
     
-    def __init__(self,scale=1,rotation=0,centre=[0,0]):
+    def __init__(self,scale=1,rotation=0,centre=np.array([0,0]).reshape((2,1))):
         '''
         INPUTS:
             scale: float, the size scale of the hexagon (in image pixel units [image coordinates])
@@ -85,6 +85,7 @@ class Hexagon:
         
         vectorPair = [face%6,(face+1)%6] # modulo to acocunt for face 5 having vertex 5 pairing with 0
         centreDisplacement = self.unitVertices[:,vectorPair[0]] + self.unitVertices[:,vectorPair[1]]
+        centreDisplacement = centreDisplacement.reshape((2,1))
         
         newCentre = self.centre + np.matmul(self.rotM(), centreDisplacement)*self.scale
         
