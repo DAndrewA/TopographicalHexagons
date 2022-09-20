@@ -8,7 +8,6 @@ Will load in the datasets into a desired grid-like format.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import primefac as primefac
 
 
