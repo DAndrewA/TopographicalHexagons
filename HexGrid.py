@@ -15,6 +15,11 @@ import matplotlib.pyplot as plt
 import Hexagon as Hex
 
 
+
+hexSize = lambda x: 3 * x * (x+1) if x > -1 else -1
+layerSize = lambda x: 6*x if x else 1
+
+
 def layerAlgorithm(targetH,numHexInRadius=3):
     '''
     This algorithm to generate the desired hex grid will start from an initial center point.
@@ -32,8 +37,6 @@ def layerAlgorithm(targetH,numHexInRadius=3):
     translationOrder = [2,3,4,5,0,1]
     
     faces = []
-    hexSize = lambda x: 3 * x * (x+1) if x > -1 else -1
-    #layerSize = lambda x: 6*x if x else 1
     
     # for each layer we want vertices on:
     for layer in np.array(range(numHexInRadius))+1:
@@ -95,33 +98,7 @@ def interpolateGrids(v,X,Y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
     nv = np.size(v,1) # number of vertices
     
     HexD = np.zeros((np.size(v,1))) # initialises the data matrix as 0
-    '''
-    print('Progress:',end='')
-    
-    for i in range(nv):
-        # for each vertex, calculate the appropriate value. Inefficient, but should work
-        x = v[0,i]
-        y = v[1,i]
-        
-        xu = np.floor(x)
-        xa = np.ceil(x)
-        
-        yu = np.floor(y)
-        ya = np.ceil(y)
-        
-        weights = np.array([ f(x-xu,y-yu) , f(x-xu,y-ya) , f(x-xa,y-yu) , f(x-xa,y-ya) ])
-        
-        Duu = D[np.logical_and(X == xu, Y == yu)]
-        Dua = D[np.logical_and(X == xu, Y == ya)]
-        Dau = D[np.logical_and(X == xa, Y == yu)]
-        Daa = D[np.logical_and(X == xa, Y == ya)]
-        
-        HexD[i] = (weights[0]*Duu + weights[1]*Dua + weights[2]*Dau + weights[3]*Daa ) / np.sum(weights)
-    
-        if not i % int(nv/100):
-            print('*',end='')
-    '''       
-    
+         
     # we can collapse X and Y to one dimension given they are Cartesian
     x = np.unique(X,axis=0).reshape((np.size(X,1),))
     y = np.unique(Y,axis=1).reshape((np.size(Y,0),))
@@ -155,7 +132,48 @@ def interpolateGrids(v,X,Y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
     return HexD
 
 
-            
+      
+
+def generateHexBase(numHexInRadius, v, HexD, f, baseVal=-20):
+    '''
+    This function will be to create the faces indices for the base of the hexagon.
+    It will use the outer layer of the hexagon to create flat edges at the sides.
+    All of the vertices on the bottom will then have triangles with the inner-most point, located directly under the centre.    
+    '''
+    nv = np.size(HexD) # the original number of vertices
+    
+    # firstly, need to get the last layer and repeat the x-y coordinates, and place a central coordinate at the bottom
+    v = np.hstack((v,v[:,-layerSize(numHexInRadius):],v[:,0].reshape((2,1))))
+    
+    # now need to set the base value for those repeated coordinates
+    HexD = np.hstack((HexD , np.ones(layerSize(numHexInRadius)+1)*baseVal))
+    
+    # This algorithm, simillar to the layerAlgorithm, will generate faces by walking the vertices around and creating faces in pairs
+    upperIndex0 = nv - layerSize(numHexInRadius) #{+-1?}
+    lowerIndex0 = nv
+    
+    iUpper = lambda x: (x-upperIndex0)%layerSize(numHexInRadius) + upperIndex0
+    iLower = lambda x: (x-lowerIndex0)%layerSize(numHexInRadius) + lowerIndex0
+    
+    edgeFaces = np.zeros((2*layerSize(numHexInRadius),3))
+    for j in range(layerSize(numHexInRadius)):
+        edgeFaces[2*j , :] = [iLower(j), iLower(j+1), iUpper(j)]
+        edgeFaces[2*j+1 , :] = [iLower(j+1), iUpper(j+1), iUpper(j)]
+        
+    
+    baseFaces = np.zeros((layerSize(numHexInRadius),3))
+    # once all of the edge faces have been generated, need to create the faces for the base
+    for j in range(layerSize(numHexInRadius)):
+        baseFaces[j,:] = np.array([ j , (j+1)%layerSize(numHexInRadius) , layerSize(numHexInRadius)])
+        
+    baseFaces = baseFaces + nv # offset the indices by the number of original vertices
+    
+    #### NEED TO COMBINE baseFaces AND f
+    f = np.vstack((f,edgeFaces,baseFaces)).T
+    
+    return v,HexD,f
+
+      
 '''
 o = 50
 

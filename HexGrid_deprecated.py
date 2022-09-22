@@ -263,3 +263,50 @@ def walkingAlgorithm_triangles(H,targetH,vertices,faces):
         print('Hexagon outside target')
     print('-------------------------------------------------------')
     return vertices,faces,outMask
+
+
+
+def interpolateGrids(v,X,Y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
+    '''
+    Function to interpolate the values D on an X-Y cartesian grid onto the HexGrid coordinates.
+    This will also allow for a weighting function, f (i.e. linear vs quadratic interpolation.)
+    
+    This does work on the assumption that X,Y are cartesian grids with unit spacing begining at the origin.
+    
+    INPUTS:
+        v: 2xa matrix of coordinate vectors for hexagon
+        X: nxm matrix, output of meshgrid for Cartesian coordinates
+        Y: nxm matrix, output of meshgrid for Cartesian coordinates
+        D: nxm matrix, data to be interpolated from Cartesian meshgrid to HexGrid
+        f: lambda function, ndarray->ndarray, needs to be able to take multiple elements and act elementwise/ be numpy compatible 
+    '''
+    nv = np.size(v,1) # number of vertices
+    
+    HexD = np.zeros((np.size(v,1))) # initialises the data matrix as 0
+    
+    print('Progress:',end='')
+    
+    for i in range(nv):
+        # for each vertex, calculate the appropriate value. Inefficient, but should work
+        x = v[0,i]
+        y = v[1,i]
+        
+        xu = np.floor(x)
+        xa = np.ceil(x)
+        
+        yu = np.floor(y)
+        ya = np.ceil(y)
+        
+        weights = np.array([ f(x-xu,y-yu) , f(x-xu,y-ya) , f(x-xa,y-yu) , f(x-xa,y-ya) ])
+        
+        Duu = D[np.logical_and(X == xu, Y == yu)]
+        Dua = D[np.logical_and(X == xu, Y == ya)]
+        Dau = D[np.logical_and(X == xa, Y == yu)]
+        Daa = D[np.logical_and(X == xa, Y == ya)]
+        
+        HexD[i] = (weights[0]*Duu + weights[1]*Dua + weights[2]*Dau + weights[3]*Daa ) / np.sum(weights)
+    
+        if not i % int(nv/100):
+            print('*',end='')
+    
+    return HexD
