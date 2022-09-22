@@ -81,7 +81,7 @@ def layerAlgorithm(targetH,numHexInRadius=3):
 
 
 
-def interpolateGrids(v,X,Y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
+def interpolateGrids(v,x,y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
     '''
     Function to interpolate the values D on an X-Y cartesian grid onto the HexGrid coordinates.
     This will also allow for a weighting function, f (i.e. linear vs quadratic interpolation.)
@@ -90,29 +90,25 @@ def interpolateGrids(v,X,Y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
     
     INPUTS:
         v: 2xa matrix of coordinate vectors for hexagon
-        X: nxm matrix, output of meshgrid for Cartesian coordinates
-        Y: nxm matrix, output of meshgrid for Cartesian coordinates
+        x: mx1 matrix, input for meshgrid for Cartesian coordinates
+        y: nx1 matrix, input for meshgrid for Cartesian coordinates
         D: nxm matrix, data to be interpolated from Cartesian meshgrid to HexGrid
         f: lambda function, ndarray->ndarray, needs to be able to take multiple elements and act elementwise/ be numpy compatible 
     '''
-    nv = np.size(v,1) # number of vertices
-    
     HexD = np.zeros((np.size(v,1))) # initialises the data matrix as 0
          
     # we can collapse X and Y to one dimension given they are Cartesian
-    x = np.unique(X,axis=0).reshape((np.size(X,1),))
-    y = np.unique(Y,axis=1).reshape((np.size(Y,0),))
+    x = np.array(x)
+    y = np.array(y)
+    print(x.shape)
     
-    # will calculate the differences in an axm and axn matrix between vx and x; and vy and y respectively
-    xDiff = -np.full((nv,np.size(x)),x) + v[0,:].reshape((nv,1))
-    yDiff = -np.full((nv,np.size(y)),y) + v[1,:].reshape((nv,1))
     
-    xUnder = (np.max(xDiff[xDiff < 0],axis=0) + v[0,:]).astype(int)
-    xAbove = (np.min(xDiff[xDiff > 0],axis=0) + v[0,:]).astype(int)
+    xUnder = np.floor(v[0,:]).astype(int)
+    xAbove = np.ceil(v[0,:]).astype(int)
     print('xUnder shape: {}'.format(xUnder.shape))
     
-    yUnder = (np.max(yDiff[yDiff < 0],axis=0) + v[1,:]).astype(int)
-    yAbove = (np.min(yDiff[yDiff > 0],axis=0) + v[1,:]).astype(int)
+    yUnder = np.floor(v[1,:]).astype(int)
+    yAbove = np.ceil(v[1,:]).astype(int)
     print('yUnder shape: {}'.format(yUnder.shape))
     
     # we've now extracted the values of x and y in the grid adjacent to our hexgrid points
