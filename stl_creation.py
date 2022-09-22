@@ -20,7 +20,7 @@ import HexGrid as HexGrid
 
 #------------------------------------------------
 
-seaVal = -2
+seaVal = -10
 
 D1,m1 = LD.load_asc_format('data\\srtm_35_04\\','srtm_35_04.asc',seaVal)
 D2,m2 = LD.load_asc_format('data\\srtm_36_04\\','srtm_36_04.asc',seaVal)
@@ -44,12 +44,12 @@ targetH = Hexagon.Hexagon(550,3,img)
 # create all the points in image space
 x = range(0,np.size(newD,1))
 y = range(0,np.size(newD,0))
-X,Y = np.meshgrid(x,y)
-print(np.shape(X))
+#X,Y = np.meshgrid(x,y)
+#print(np.shape(X))
 
 
 ####
-NUMHEX = 150
+NUMHEX = 550
 
 v,f = HexGrid.layerAlgorithm(targetH,NUMHEX)
 
@@ -59,7 +59,7 @@ v,f = HexGrid.layerAlgorithm(targetH,NUMHEX)
 #ax.scatter(v[0,:],v[1,:])
 
 
-HexD = HexGrid.interpolateGrids(v,X,Y,newD)
+HexD = HexGrid.interpolateGrids(v,x,y,newD)
 
 #ax = fig.add_subplot(111)
 #ax.contourf(v[0,:],v[1,:],HexD)
@@ -70,7 +70,7 @@ v,HexD,f = HexGrid.generateHexBase(NUMHEX, v, HexD, f, baseVal=-50)
 
 # SCALING of HexD
 
-HexD[HexD > seaVal] = HexD[HexD > seaVal] * 1000
+HexD[HexD > seaVal] = HexD[HexD > seaVal] * 100000
 
 HexD[HexD == seaVal] = -20 
 
