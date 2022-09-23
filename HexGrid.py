@@ -81,7 +81,9 @@ def layerAlgorithm(targetH,numHexInRadius=3):
 
 
 
-def interpolateGrids(v,x,y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
+# this weighting function is made so that x[y] = +-1 gives 0, and x[y] = 0 gives 1
+wFn = lambda x,y: np.cos(np.pi/2 * x)*np.cos(np.pi/2 * y) 
+def interpolateGrids(v, x, y, D, f=wFn):
     '''
     Function to interpolate the values D on an X-Y cartesian grid onto the HexGrid coordinates.
     This will also allow for a weighting function, f (i.e. linear vs quadratic interpolation.)
@@ -123,7 +125,7 @@ def interpolateGrids(v,x,y,D,f=lambda x,y:-np.sqrt(x*x + y*y)+1):
     weights = np.array([ f(v[1,:] - yUnder, v[0,:] - xUnder), f(v[1,:] - yAbove, v[0,:] - xUnder), f(v[1,:] - yUnder, v[0,:] - xAbove), f(v[1,:] - yAbove, v[0,:] - xAbove) ])
     print('weights shape: {}'.format(weights.shape))
     
-    HexD = ( weights[0,:]*D_xUyU + weights[1,:]*D_xUyA + weights[2,:]*D_xAyU + weights[3,:]*D_xAyA ) / np.sum(weights)
+    HexD = ( weights[0,:]*D_xUyU + weights[1,:]*D_xUyA + weights[2,:]*D_xAyU + weights[3,:]*D_xAyA ) / np.sum(weights,axis=0)
     
     return HexD
 
