@@ -77,7 +77,7 @@ def layerAlgorithm(targetH,numHexInRadius=3):
             
     # adjust the origin so that the grid is centered on targetH
     vertices = vertices + targetH.centre
-    return vertices, faces
+    return vertices, np.array(faces).astype(int)
 
 
 
@@ -135,6 +135,7 @@ def interpolateGrids(v, x, y, D, f=wFn):
 def generateHexBase(numHexInRadius, v, HexD, f, baseVal=-20):
     '''
     This function will be to create the faces indices for the base of the hexagon.
+    This will only work for a flat base.
     It will use the outer layer of the hexagon to create flat edges at the sides.
     All of the vertices on the bottom will then have triangles with the inner-most point, located directly under the centre.    
     '''
@@ -167,11 +168,42 @@ def generateHexBase(numHexInRadius, v, HexD, f, baseVal=-20):
     baseFaces = baseFaces + nv # offset the indices by the number of original vertices
     
     #### NEED TO COMBINE baseFaces AND f
-    f = np.vstack((f,edgeFaces,baseFaces)).T.astype(int)
+    f = np.vstack((f,edgeFaces,baseFaces)).astype(int)
     
     return v,HexD,f
 
       
+
+def generateTexturedBase(numHexInRadius,HexD_top,HexD_bottom,layerOffset,v,f):
+    '''
+    This function will be used to generate the faces list required to stitch two hexagonal objects together vertically.
+    '''
+    if HexD_top.size == HexD_bottom.size:
+        print('PROBLEM: sizes aren\'t the same')
+        return None
+    
+    # The size of HexD should be the same for both, and the same as v[i,:] size
+    nv = HexD_top.size
+    
+    # need to stack two instances of v, and add on faces with the adjusted indices
+    v = np.hstack((v,v))
+    f = np.vstack((f, f+nv)).astype(int)
+    HexD_top = np.hstack(HexD_top, HexD_bottom - layerOffset)
+    
+    upperIndex0 = nv - layerSize(numHexInRadius)
+    lowerIndex0 = nv + hexSize(numHexInRadius-1)
+    iUpper = lambda x: (x-upperIndex0)%layerSize(numHexInRadius) + upperIndex0
+    iLower = lambda x: (x-lowerIndex0)%layerSize(numHexInRadius) + lowerIndex0
+    
+    edgeFaces = np.zeros((2*layerSize(numHexInRadius),3))
+    for j in range(layerSize(numHexInRadius)):
+        edgeFaces[2*j , :] = [iLower(j), iLower(j+1), iUpper(j)]
+        edgeFaces[2*j+1 , :] = [iLower(j+1), iUpper(j+1), iUpper(j)]
+        
+    f = np.vstack((f,edgeFaces))
+    
+    return v,HexD_top,f
+
 '''
 o = 50
 

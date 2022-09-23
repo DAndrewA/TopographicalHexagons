@@ -94,7 +94,7 @@ HexD[HexD > newSeaVal] = HexD[HexD > newSeaVal] * scaleVal
 
 STL_tile = mesh.Mesh(np.zeros(f.shape[1], dtype=mesh.Mesh.dtype))
                      
-for i, face in enumerate(f.T):
+for i, face in enumerate(f):
     for j,pos in enumerate(face):
         #pos = int(pos)
         #vec3 = [ *v[:,pos] , HexD[pos] ]
