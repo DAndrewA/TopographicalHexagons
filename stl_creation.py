@@ -33,7 +33,7 @@ del D1,D2 # save space
 
 lcd = 1
 newD = D_combined.copy()
-newD,lcd = LD.downsample_minimum(D_combined)
+#newD,lcd = LD.downsample_minimum(D_combined)
 
 newM = m1.copy()
 newM[2] = newM[2] * lcd
@@ -56,7 +56,7 @@ y = range(0,np.size(newD,0))
 
 
 ####
-NUMHEX = 580
+NUMHEX = 900
 
 v,f = HexGrid.layerAlgorithm(targetH,NUMHEX)
 
@@ -66,7 +66,9 @@ v,f = HexGrid.layerAlgorithm(targetH,NUMHEX)
 #ax.scatter(v[0,:],v[1,:])
 
 
-HexD = HexGrid.interpolateGrids(v,x,y,newD)
+newWFn = lambda x,y: np.cos(np.pi/2 * x)*np.cos(np.pi/2 * y) + 0.5
+
+HexD = HexGrid.interpolateGrids(v,x,y,newD,newWFn)
 
 newSeaVal = -10
 
@@ -94,13 +96,13 @@ STL_tile = mesh.Mesh(np.zeros(f.shape[1], dtype=mesh.Mesh.dtype))
                      
 for i, face in enumerate(f.T):
     for j,pos in enumerate(face):
-        pos = int(pos)
-        vec3 = [ *v[:,pos] , HexD[pos] ]
-        STL_tile.vectors[i][j] = vec3
+        #pos = int(pos)
+        #vec3 = [ *v[:,pos] , HexD[pos] ]
+        STL_tile.vectors[i][j] = [ *v[:,pos] , HexD[pos] ]
  
         
 # create a relevant STL filename so I can keep track of everything I've done
-tileNum = '1'
+tileNum = '1FULL'
 folderName = 'data\\_stl\\' 
 fileName = 'TILE{}_n{}_b{:d}_c{:d}_s{}.stl'.format(tileNum,NUMHEX,-baseVal,-newSeaVal,scaleVal)
 

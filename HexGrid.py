@@ -167,7 +167,7 @@ def generateHexBase(numHexInRadius, v, HexD, f, baseVal=-20):
     baseFaces = baseFaces + nv # offset the indices by the number of original vertices
     
     #### NEED TO COMBINE baseFaces AND f
-    f = np.vstack((f,edgeFaces,baseFaces)).T
+    f = np.vstack((f,edgeFaces,baseFaces)).T.astype(int)
     
     return v,HexD,f
 
