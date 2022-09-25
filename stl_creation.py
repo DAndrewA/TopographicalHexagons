@@ -10,6 +10,7 @@ Main script to control the taking of the data. This is based on the jupyter note
 
 import numpy as np
 from stl import mesh
+import imageio as imageio
 
 
 import loadData as LD
@@ -66,9 +67,9 @@ v,f = HexGrid.layerAlgorithm(targetH,NUMHEX)
 #ax.scatter(v[0,:],v[1,:])
 
 
-newWFn = lambda x,y: np.cos(np.pi/2 * x)*np.cos(np.pi/2 * y) + 0.5
+#newWFn = lambda x,y: np.cos(np.pi/2 * x)*np.cos(np.pi/2 * y) + 0.5
 
-HexD = HexGrid.interpolateGrids(v,x,y,newD,newWFn)
+HexD = HexGrid.interpolateGrids(v,x,y,newD)#,newWFn)
 
 newSeaVal = -10
 
@@ -78,31 +79,53 @@ HexD[HexD < newSeaVal] = newSeaVal
 #ax.contourf(v[0,:],v[1,:],HexD)
 
 #------------------------------------------------
-baseVal = -150
+baseVal = -400
+'''
 v,HexD,f = HexGrid.generateHexBase(NUMHEX, v, HexD, f, baseVal)
+'''
+baseHeightScale = 50
+# I will load in the smoothed shell image, create a target hexagon, create a grid for the smoothed shell, and use it as the base to the stl model
+smoothShell = imageio.imread('data\\shell\\smoothShell.png')
+smoothShell = -smoothShell / np.max(smoothShell) * baseHeightScale
+
+x = range(smoothShell.shape[1])
+y = range(smoothShell.shape[0])
+baseScale = 540 * 2 / np.sqrt(3)
+baseCentre = np.array([520,508]).reshape(2,1)
+baseRotation = -90
+baseShift = np.array([200,100]).reshape((2,1))
+
+baseTargetH = Hexagon.Hexagon(baseScale,baseRotation,baseCentre+baseShift)
+vbase,__ = HexGrid.layerAlgorithm(baseTargetH,NUMHEX)
+HexD_base = HexGrid.interpolateGrids(vbase, x, y, smoothShell)
+
+del vbase, __
+
+v,HexD,f = HexGrid.generateTexturedBase(NUMHEX, HexD, HexD_base, baseVal, v, f)
+
+
+
+
 
 # SCALING of HexD
 
-
-
-
-scaleVal = 0.04
+scaleVal = 0.1
 
 HexD[HexD > newSeaVal] = HexD[HexD > newSeaVal] * scaleVal
 
 
 
-STL_tile = mesh.Mesh(np.zeros(f.shape[1], dtype=mesh.Mesh.dtype))
+STL_tile = mesh.Mesh(np.zeros(f.shape[0], dtype=mesh.Mesh.dtype))
                      
 for i, face in enumerate(f):
     for j,pos in enumerate(face):
-        #pos = int(pos)
-        #vec3 = [ *v[:,pos] , HexD[pos] ]
-        STL_tile.vectors[i][j] = [ *v[:,pos] , HexD[pos] ]
+        pos = int(pos)
+        vec3 = [ *v[:,pos] , HexD[pos] ]
+        STL_tile.vectors[i][j] = vec3#[ *v[:,pos] , HexD[pos] ]
  
         
 # create a relevant STL filename so I can keep track of everything I've done
-tileNum = '1FULL'
+tileNum = '1Textured'
 folderName = 'data\\_stl\\' 
 fileName = 'TILE{}_n{}_b{:d}_c{:d}_s{}.stl'.format(tileNum,NUMHEX,-baseVal,-newSeaVal,scaleVal)
 
