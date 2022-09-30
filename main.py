@@ -42,12 +42,15 @@ SAVE_filename = 'tile{}_r{}_d{}_h{}.stl'
 # The hexagon vertices and faces for 3d printing
 PRINTER_units_per_mm = 1
 PRINTER_desired_radius = 40 # in mm
-PRINTER_desired_depth = 15 # im mm
+PRINTER_desired_depth = 5#15 # im mm
 PRINTER_desired_height = 10 # in mm
 SHELL_depression_mm = 1
 PRINTER_sea_depression = -0.5 # in mm
 LOAD_seaVal = -10000
 SRTM_cullValue = LOAD_seaVal / 25
+JC_radius = 15 # in pixel units
+JC_height = 3 # in mm
+JC_roundingHeight = 0.75 # in mm
 
 PRINTER_Hexagon = Hexagon.Hexagon(PRINTER_desired_radius*PRINTER_units_per_mm)
 
@@ -129,6 +132,14 @@ Transform = CT.CoordinateTransform(metadata=m1)
 ###################################################################
 ######### NEED SECTION FOR LOADING IN JOURNEY COORDINATES #########
 ###################################################################
+
+# extract the path coordinates from the journeyCoords.txt file, and convert them into image space coordinates.
+pathCoords,pathNames = LD.load_coordinate_list('data\\','journeyCoords.txt')
+pathImgCoords = Transform.coords2Img(pathCoords)
+
+radiusFn = lambda x: np.sqrt(np.sum(x*x ,axis = 0))
+
+
 ###################################################################
 ########### AND PLACING THEM INTO THE SRTM_D MATRIX... ############
 ###################################################################
@@ -144,7 +155,7 @@ SRTM_args = [SRTM_scale,SRTM_rotation,SRTM_centre]
 
 SRTM_Hexagon = Hexagon.Hexagon(*SRTM_args)
 
-for tile in np.array([1,2,3,4,5,6]): # for each tile,
+for tile in np.array([1,2]):#,3,4,5,6]): # for each tile,
     # start by creating the vertices of the specific hexagon, and extracting the heightmap
     print('Creating Hexagon {}: '.format(tile),end='')
     SRTM_v, __ = HexGrid.layerAlgorithm(SRTM_Hexagon,NUMHEX)
@@ -157,6 +168,20 @@ for tile in np.array([1,2,3,4,5,6]): # for each tile,
     SRTM_HexD[SRTM_HexD > SRTM_cullValue] = SRTM_HexD[SRTM_HexD > SRTM_cullValue] * PRINTER_mm_per_heightunit * PRINTER_units_per_mm
     SRTM_HexD[SRTM_HexD <= SRTM_cullValue] = PRINTER_sea_depression*PRINTER_units_per_mm    
     print('data extracted; ',end='')
+    
+    print('Inserting Journey Coords')
+    # add in the journey coordinates
+    for JC in pathImgCoords.T:
+        JC = JC.reshape((2,1))
+        JC_displacement = radiusFn(SRTM_v - JC)
+        truth = JC_displacement <= JC_radius
+        if np.sum(truth): # only if there are points within the hexagon that are valid 
+            averageValue = np.sum(SRTM_HexD[truth]) / np.sum(truth)
+            print('averageValue={}'.format(averageValue))
+            #print('averageValue.shape={}'.format(averageValue.shape))
+            SRTM_HexD[truth] = averageValue + (JC_height + np.sqrt( JC_radius**2 - JC_displacement[truth]*JC_displacement[truth] )/JC_radius * JC_roundingHeight)*PRINTER_units_per_mm
+    print('Inserting JourneyCoords: success')
+    
     # now append the shell data to the SRTM data
     SRTM_HexD = np.hstack((SRTM_HexD,SHELL_heightmap))
     

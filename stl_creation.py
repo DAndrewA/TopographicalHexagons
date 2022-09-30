@@ -75,6 +75,28 @@ newSeaVal = -10
 
 HexD[HexD < newSeaVal] = newSeaVal
 
+
+################### Add in the journey coords
+# extract the path coordinates from the journeyCoords.txt file, and convert them into image space coordinates.
+pathCoords,pathNames = LD.load_coordinate_list('data\\','journeyCoords.txt')
+pathImgCoords = Transform.coords2Img(pathCoords)
+
+JCoords_radius = 25 # in pixel units
+JCoords_height = 300
+JC_rounding = 2
+radiusFn = lambda x: np.sqrt(np.sum(x*x ,axis = 0))
+
+for JC in pathImgCoords.T:
+    JC = JC.reshape((2,1))
+    JC_displacement = radiusFn(v - JC)
+    truth = JC_displacement <= JCoords_radius
+    HexD[truth] = np.sum(HexD[truth]) / np.sum(truth)
+    HexD[truth] = JCoords_height - JC_displacement[truth] * JC_rounding
+
+
+
+
+
 #ax = fig.add_subplot(111)
 #ax.contourf(v[0,:],v[1,:],HexD)
 
@@ -125,7 +147,7 @@ for i, face in enumerate(f):
  
         
 # create a relevant STL filename so I can keep track of everything I've done
-tileNum = '1Textured'
+tileNum = '1JC'
 folderName = 'data\\_stl\\' 
 fileName = 'TILE{}_n{}_b{:d}_c{:d}_s{}.stl'.format(tileNum,NUMHEX,-baseVal,-newSeaVal,scaleVal)
 
