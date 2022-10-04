@@ -140,7 +140,7 @@ def generateHexBase(numHexInRadius, v, HexD, f, baseVal=-20):
     It will use the outer layer of the hexagon to create flat edges at the sides.
     All of the vertices on the bottom will then have triangles with the inner-most point, located directly under the centre.    
     '''
-    nv = np.size(HexD) # the original number of vertices
+    nv = v.shape[1] # the original number of vertices
     
     # firstly, need to get the last layer and repeat the x-y coordinates, and place a central coordinate at the bottom
     v = np.hstack((v,v[:,-layerSize(numHexInRadius):],v[:,0].reshape((2,1))))

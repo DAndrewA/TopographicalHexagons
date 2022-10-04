@@ -42,7 +42,7 @@ SAVE_filename = 'tile{}_r{}_d{}_h{}.stl'
 # The hexagon vertices and faces for 3d printing
 PRINTER_units_per_mm = 1
 PRINTER_desired_radius = 40 # in mm
-PRINTER_desired_depth = 5#15 # im mm
+PRINTER_desired_depth = 7#15 # im mm
 PRINTER_desired_height = 10 # in mm
 SHELL_depression_mm = 1
 PRINTER_sea_depression = -0.5 # in mm
@@ -59,11 +59,10 @@ print('Creating print coordinates: ',end='')
 v0, f0 = HexGrid.layerAlgorithm(PRINTER_Hexagon,NUMHEX)
 nv = v0.shape[1]
 
-__ = np.array([0]).reshape((1,1)) # dummy variable
+HexD = np.zeros((nv))
 # this pre-creates the vertices and faces objects that can simply be reused
 print('stacking layers: ',end='')
-v0,__,f0 = HexGrid.generateTexturedBase(NUMHEX, __, __, 0, v0, f0) 
-del __
+v0,HexD,f0 = HexGrid.generateHexBase(NUMHEX, v0, HexD, f0, -PRINTER_desired_depth)
 print('success')
 
 # create the STL object in memory. We can then reuse it to speed up the savig process
@@ -78,6 +77,7 @@ del v0 # save space
 print('success')
 
 
+''' # NOT LOADING IN THE SHELL
 # Now we will load in the shell and extract the heightmap for it.
 print('Loading in the shell data: ',end='')
 
@@ -102,7 +102,7 @@ SHELL_heightmap = HexGrid.interpolateGrids(vbase, x, y, SHELL_heightmap)
 SHELL_heightmap = SHELL_heightmap - (PRINTER_desired_depth * PRINTER_units_per_mm)
 del vbase, __, x, y
 print('success')
-
+'''
 
 # Now we can start on loading in the SRTM data, getting the hexagons and saving the individual .stl files
 # the minimum and maximum occuring values in the SRTM dataset -70.0 : 3258.0
@@ -155,7 +155,7 @@ SRTM_args = [SRTM_scale,SRTM_rotation,SRTM_centre]
 
 SRTM_Hexagon = Hexagon.Hexagon(*SRTM_args)
 
-for tile in np.array([1,2]):#,3,4,5,6]): # for each tile,
+for tile in np.array([1,2,3,4,5,6]): # for each tile,
     # start by creating the vertices of the specific hexagon, and extracting the heightmap
     print('Creating Hexagon {}: '.format(tile),end='')
     SRTM_v, __ = HexGrid.layerAlgorithm(SRTM_Hexagon,NUMHEX)
@@ -183,11 +183,11 @@ for tile in np.array([1,2]):#,3,4,5,6]): # for each tile,
     print('Inserting JourneyCoords: success')
     
     # now append the shell data to the SRTM data
-    SRTM_HexD = np.hstack((SRTM_HexD,SHELL_heightmap))
-    
+    #SRTM_HexD = np.hstack((SRTM_HexD,SHELL_heightmap))
+    HexD[:nv] = SRTM_HexD
     for i, face in enumerate(f0):
         for j,pos in enumerate(face):
-            STL_tile.vectors[i][j][2] = SRTM_HexD[pos]
+            STL_tile.vectors[i][j][2] = HexD[pos]
 
     print('success')
     fname = SAVE_filename.format(tile,PRINTER_desired_radius,PRINTER_desired_depth,PRINTER_desired_height)
