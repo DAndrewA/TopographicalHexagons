@@ -14,8 +14,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Hexagon as Hex
 
-
-
 hexSize = lambda x: 3 * x * (x+1) if x > -1 else -1
 layerSize = lambda x: 6*x if x else 1
 
@@ -211,6 +209,38 @@ def generateTexturedBase(numHexInRadius,HexD_top,HexD_bottom,layerOffset,v,f):
     
     return v,HexD_top,f
 
+
+def getCornerIndices(numHexInRadius,cornerDepth,cornerLength):
+    '''
+    This function will be to generate a list of indices for a given number of hexagon radius of the grid, that satisfy the conditin of being "in a corner".
+    
+    INPUTS:
+        numHexInRadius: int, as used in other functions, the total number of layers to the hexagonal grid.
+        cornerDepth: int, <numHexInRadius, the depth of the corner indices provided, in terms of the layers.
+        cornerLength: int, <numHexInRadius/2, the extent of where the corner indices are given from a corner (the corner is #0).
+    OUTPUTS:
+        cornerIndices: 1xm array, the indices of the grid-points that are decided to be a corner.
+    '''
+    numCorner = cornerDepth * (2*cornerLength - cornerDepth)
+    cornerIndices = np.zeros((1,6*numCorner))
+
+    # for each corner, we'll get the required indices
+    for c in range(6):
+        cIndices = np.zeros((1,numCorner))
+        # for each layer in the corner
+        cIndTrack = 0
+        for l in range(cornerDepth):
+            s = cornerLength - l
+            cornerIndex = hexSize(numHexInRadius - l - 1) + c*(numHexInRadius-l)
+            ind = (np.array(range(-s+1,s)).reshape((1,2*s-1)) + cornerIndex - hexSize(numHexInRadius-l-1) ) % layerSize(numHexInRadius - l) + hexSize(numHexInRadius-l-1)
+
+            g = list(range(cIndTrack,cIndTrack + (2*s - 1))) # g is intorduced as a list of indices in the cIndices array that we want to change
+            
+            cIndices[0,g] = ind
+            cIndTrack += 2*s - 1
+        g = list(range(c*numCorner, (c+1)*numCorner))
+        cornerIndices[0,g] = cIndices
+    return cornerIndices.astype(int)
 '''
 o = 50
 

@@ -27,14 +27,17 @@ import imageio as imageio
 
 
 import loadData as LD
-import CoordinateTransform as CT
+import coordinateTransform as CT
 import Hexagon as Hexagon
 import HexGrid as HexGrid
+
+# need a specific folder separation character, as differs between mac and windows
+folderSep = '/'# '\\'
 
 # start by defining all the constants for the program
 NUMHEX = 900
 
-SAVE_folder = 'data\\models\\'
+SAVE_folder = 'data' + folderSep + 'models' + folderSep
 SAVE_filename = 'tile{}_r{}_d{}_h{}.stl'
 
 
@@ -51,6 +54,12 @@ SRTM_cullValue = LOAD_seaVal / 25
 JC_radius = 15 # in pixel units
 JC_height = 3 # in mm
 JC_roundingHeight = 0.75 # in mm
+
+# parameters for including the raised corners in the Heightmap
+CORNER_desired_height = PRINTER_desired_height + 1 # in mm
+CORNER_scale = 0.1 # proportional width of the corner pieces.
+CORNER_depth = int(CORNER_scale * NUMHEX / 2)
+CORNER_length = int(CORNER_scale * NUMHEX)
 
 PRINTER_Hexagon = Hexagon.Hexagon(PRINTER_desired_radius*PRINTER_units_per_mm)
 
@@ -82,7 +91,7 @@ print('success')
 print('Loading in the shell data: ',end='')
 
 # load in the smooth shell heightmap
-SHELL_heightmap = imageio.imread('data\\shell\\smoothShell.png')
+SHELL_heightmap = imageio.imread('data' + folderSep + 'shell' + folderSep + 'smoothShell.png')
 SHELL_heightmap = -SHELL_heightmap / np.max(SHELL_heightmap) * SHELL_depression_mm * PRINTER_units_per_mm
 
 x = range(SHELL_heightmap.shape[1])
@@ -104,6 +113,9 @@ del vbase, __, x, y
 print('success')
 '''
 
+##### SECTION FOR OBTAINING THE CORNER INDICES FOR RAISED CORNERS (use in coasters)
+CORNER_indices = HexGrid.getCornerIndices(NUMHEX,CORNER_depth,CORNER_length)
+
 # Now we can start on loading in the SRTM data, getting the hexagons and saving the individual .stl files
 # the minimum and maximum occuring values in the SRTM dataset -70.0 : 3258.0
 PRINTER_mm_per_heightunit = PRINTER_desired_height / 3258
@@ -111,8 +123,8 @@ PRINTER_mm_per_heightunit = PRINTER_desired_height / 3258
 # load in the SRTM data, as standard. We won't downsample (yet)
 print('Loading SRTM data: ',end='')
 
-D1,m1 = LD.load_asc_format('data\\srtm_35_04\\','srtm_35_04.asc',LOAD_seaVal)
-D2,m2 = LD.load_asc_format('data\\srtm_36_04\\','srtm_36_04.asc',LOAD_seaVal)
+D1,m1 = LD.load_asc_format('data' + folderSep + 'srtm_35_04' + folderSep + '','srtm_35_04.asc',LOAD_seaVal)
+D2,m2 = LD.load_asc_format('data' + folderSep + 'srtm_36_04' + folderSep + '','srtm_36_04.asc',LOAD_seaVal)
 
 SRTM_D = np.hstack((D1,D2))
 SRTM_x = range(SRTM_D.shape[1])
@@ -134,7 +146,7 @@ Transform = CT.CoordinateTransform(metadata=m1)
 ###################################################################
 
 # extract the path coordinates from the journeyCoords.txt file, and convert them into image space coordinates.
-pathCoords,pathNames = LD.load_coordinate_list('data\\','journeyCoords.txt')
+pathCoords,pathNames = LD.load_coordinate_list('data' + folderSep + '','journeyCoords.txt')
 pathImgCoords = Transform.coords2Img(pathCoords)
 
 radiusFn = lambda x: np.sqrt(np.sum(x*x ,axis = 0))
@@ -182,6 +194,9 @@ for tile in np.array([1,2,3,4,5,6]): # for each tile,
             SRTM_HexD[truth] = averageValue + (JC_height + np.sqrt( JC_radius**2 - JC_displacement[truth]*JC_displacement[truth] )/JC_radius * JC_roundingHeight)*PRINTER_units_per_mm
     print('Inserting JourneyCoords: success')
     
+    # INSERT the corner indices additional height
+    SRTM_HexD[CORNER_indices] = CORNER_desired_height * PRINTER_units_per_mm
+
     # now append the shell data to the SRTM data
     #SRTM_HexD = np.hstack((SRTM_HexD,SHELL_heightmap))
     HexD[:nv] = SRTM_HexD
