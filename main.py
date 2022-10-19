@@ -44,7 +44,7 @@ SAVE_filename = 'tile{}_r{}_d{}_h{}.stl'
 
 # The hexagon vertices and faces for 3d printing
 PRINTER_units_per_mm = 1
-PRINTER_desired_radius = 40 # in mm
+PRINTER_desired_radius = 57.2#40 # in mm
 PRINTER_desired_depth = 7#15 # im mm
 PRINTER_desired_height = 10 # in mm
 SHELL_depression_mm = 1
@@ -56,10 +56,12 @@ JC_height = 3 # in mm
 JC_roundingHeight = 0.75 # in mm
 
 # parameters for including the raised corners in the Heightmap
-CORNER_desired_height = PRINTER_desired_height + 1 # in mm
+CORNER_desired_height = PRINTER_desired_height + 10 # in mm
 CORNER_scale = 0.1 # proportional width of the corner pieces.
 CORNER_depth = int(CORNER_scale * NUMHEX / 2)
 CORNER_length = int(CORNER_scale * NUMHEX)
+
+CORNER_glassDepth=6 # in mm
 
 PRINTER_Hexagon = Hexagon.Hexagon(PRINTER_desired_radius*PRINTER_units_per_mm)
 
@@ -115,10 +117,12 @@ print('success')
 
 ##### SECTION FOR OBTAINING THE CORNER INDICES FOR RAISED CORNERS (use in coasters)
 CORNER_indices = HexGrid.getCornerIndices(NUMHEX,CORNER_depth,CORNER_length)
+ld = CORNER_length-CORNER_depth
+CORNER_glassIndices = HexGrid.getCornerIndices(NUMHEX-CORNER_depth,ld,ld)
 
 # Now we can start on loading in the SRTM data, getting the hexagons and saving the individual .stl files
 # the minimum and maximum occuring values in the SRTM dataset -70.0 : 3258.0
-PRINTER_mm_per_heightunit = PRINTER_desired_height / 3258
+PRINTER_mm_per_heightunit = PRINTER_desired_height / 2650#3258
 
 # load in the SRTM data, as standard. We won't downsample (yet)
 print('Loading SRTM data: ',end='')
@@ -156,6 +160,7 @@ radiusFn = lambda x: np.sqrt(np.sum(x*x ,axis = 0))
 ########### AND PLACING THEM INTO THE SRTM_D MATRIX... ############
 ###################################################################
 ###################################################################
+maxVals = []
 print('NEED TO LOAD IN JOURNEY COORDINATES')
 
 # example config from Jupyter notebook
@@ -176,6 +181,8 @@ for tile in np.array([1,2,3,4,5,6]): # for each tile,
     # extract the SRTM data into the hexagonal grid
     SRTM_HexD = HexGrid.interpolateGrids(SRTM_v,SRTM_x,SRTM_y,SRTM_D)
     
+    maxVals.append(np.max(SRTM_HexD))
+
     # Now perform the appropriate scaling
     SRTM_HexD[SRTM_HexD > SRTM_cullValue] = SRTM_HexD[SRTM_HexD > SRTM_cullValue] * PRINTER_mm_per_heightunit * PRINTER_units_per_mm
     SRTM_HexD[SRTM_HexD <= SRTM_cullValue] = PRINTER_sea_depression*PRINTER_units_per_mm    
@@ -196,6 +203,7 @@ for tile in np.array([1,2,3,4,5,6]): # for each tile,
     
     # INSERT the corner indices additional height
     SRTM_HexD[CORNER_indices] = CORNER_desired_height * PRINTER_units_per_mm
+    SRTM_HexD[CORNER_glassIndices] = (CORNER_desired_height - CORNER_glassDepth) * PRINTER_units_per_mm
 
     # now append the shell data to the SRTM data
     #SRTM_HexD = np.hstack((SRTM_HexD,SHELL_heightmap))
@@ -219,3 +227,4 @@ tf=time()
 print('t0: {}'.format(t0))
 print('tf: {}'.format(tf))
 print('elapsed time: {}'.format(tf-t0))
+print(maxVals)
