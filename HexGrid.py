@@ -162,7 +162,8 @@ def generateHexBase(numHexInRadius, v, HexD, f, baseVal=-20):
     baseFaces = np.zeros((layerSize(numHexInRadius),3))
     # once all of the edge faces have been generated, need to create the faces for the base
     for j in range(layerSize(numHexInRadius)):
-        baseFaces[j,:] = np.array([ j , (j+1)%layerSize(numHexInRadius) , layerSize(numHexInRadius)])
+        #baseFaces[j,:] = np.array([ j , (j+1)%layerSize(numHexInRadius) , layerSize(numHexInRadius)])
+        baseFaces[j,:] = np.array([(j+1)%layerSize(numHexInRadius), j, layerSize(numHexInRadius)])
         
     baseFaces = baseFaces + nv # offset the indices by the number of original vertices
     

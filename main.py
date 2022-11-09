@@ -44,14 +44,14 @@ SAVE_filename = 'tile{}_r{}_d{}_h{}.stl'
 
 # The hexagon vertices and faces for 3d printing
 PRINTER_units_per_mm = 1
-PRINTER_desired_radius = 57.2#40 # in mm
-PRINTER_desired_depth = 7#15 # im mm
-PRINTER_desired_height = 10 # in mm
-SHELL_depression_mm = 1
-PRINTER_sea_depression = -0.5 # in mm
+PRINTER_desired_radius = 50#40 # in mm, this is how long a side of the hexagon is. Largest diameter, corner to corner is 2x.
+PRINTER_desired_depth = 7#15 # im mm, this is the depth before any topographical displacement is considered.
+PRINTER_desired_height = 10 # in mm, the desired height ASL that the highest value of all the hexagons will be scaled to.
+SHELL_depression_mm = 1 # in mm, the depth of the shell when used in the model.
+PRINTER_sea_depression = -0.5 # in mm, the depression from PRINTER_desired_depth that the sea-designated points (NaN in data) will be dset to.
 LOAD_seaVal = -10000
-SRTM_cullValue = LOAD_seaVal / 25
-JC_radius = 15 # in pixel units
+SRTM_cullValue = LOAD_seaVal / 25 # cutoff value in the HexGrid data that will designate if a spot is the sea or not
+JC_radius = 20#15 # in pixel units of the SRTM image.
 JC_height = 3 # in mm
 JC_roundingHeight = 0.75 # in mm
 
@@ -115,10 +115,13 @@ del vbase, __, x, y
 print('success')
 '''
 
+'''
 ##### SECTION FOR OBTAINING THE CORNER INDICES FOR RAISED CORNERS (use in coasters)
 CORNER_indices = HexGrid.getCornerIndices(NUMHEX,CORNER_depth,CORNER_length)
 ld = CORNER_length-CORNER_depth
 CORNER_glassIndices = HexGrid.getCornerIndices(NUMHEX-CORNER_depth,ld,ld)
+'''
+
 
 # Now we can start on loading in the SRTM data, getting the hexagons and saving the individual .stl files
 # the minimum and maximum occuring values in the SRTM dataset -70.0 : 3258.0
@@ -201,9 +204,11 @@ for tile in np.array([1,2,3,4,5,6]): # for each tile,
             SRTM_HexD[truth] = averageValue + (JC_height + np.sqrt( JC_radius**2 - JC_displacement[truth]*JC_displacement[truth] )/JC_radius * JC_roundingHeight)*PRINTER_units_per_mm
     print('Inserting JourneyCoords: success')
     
+    '''
     # INSERT the corner indices additional height
     SRTM_HexD[CORNER_indices] = CORNER_desired_height * PRINTER_units_per_mm
     SRTM_HexD[CORNER_glassIndices] = (CORNER_desired_height - CORNER_glassDepth) * PRINTER_units_per_mm
+    '''
 
     # now append the shell data to the SRTM data
     #SRTM_HexD = np.hstack((SRTM_HexD,SHELL_heightmap))
