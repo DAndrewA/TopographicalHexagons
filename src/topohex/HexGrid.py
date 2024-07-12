@@ -12,7 +12,7 @@ This will give consitency with the hexagons in Hexagon.py
 
 import numpy as np
 import matplotlib.pyplot as plt
-import Hexagon as Hex
+from . import Hexagon as Hex
 
 hexSize = lambda x: 3 * x * (x+1) if x > -1 else -1
 layerSize = lambda x: 6*x if x else 1

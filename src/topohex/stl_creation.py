@@ -13,10 +13,10 @@ from stl import mesh
 import imageio as imageio
 
 
-import loadData as LD
-import CoordinateTransform as CT
-import Hexagon as Hexagon
-import HexGrid as HexGrid
+from . import loadData as LD
+from . import CoordinateTransform as CT
+from . import Hexagon
+from . import HexGrid
 
 
 #------------------------------------------------
