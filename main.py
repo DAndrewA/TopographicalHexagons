@@ -26,10 +26,10 @@ from stl import mesh
 import imageio as imageio
 
 
-import loadData as LD
-import coordinateTransform as CT
-import Hexagon as Hexagon
-import HexGrid as HexGrid
+from topohex import loadData as LD
+from topohex import coordinateTransform as CT
+from topohex import Hexagon as Hexagon
+from topohex import HexGrid as HexGrid
 
 # need a specific folder separation character, as differs between mac and windows
 folderSep = '/'# '\\'

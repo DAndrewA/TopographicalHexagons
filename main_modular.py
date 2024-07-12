@@ -32,11 +32,10 @@ import numpy as np
 from stl import mesh
 import imageio as imageio
 
-
-import loadData as LD
-import coordinateTransform as CT
-import Hexagon as Hexagon
-import HexGrid as HexGrid
+from topohex import loadData as LD
+from topohex import coordinateTransform as CT
+from topohex import Hexagon
+from topohex import HexGrid
 
 # need a specific folder separation character, as differs between mac and windows
 folderSep = '/'# '\\'
@@ -46,7 +45,7 @@ folderSep = '/'# '\\'
 # DESIGN VARIABLES
 
 # the first set of variables are the flags for different features to be included in the tiles.
-FLAG_textured_bottom = False # flag to load in an image to the bottom of the tile. Set to True to allow. False creates a flat bottom.
+FLAG_textured_bottom = True # flag to load in an image to the bottom of the tile. Set to True to allow. False creates a flat bottom.
 SHELL_loadFile = 'data' + folderSep + 'shell' + folderSep + 'smoothShell.png'
 FLAG_journey_coordinates = True # flag to allow the inclusion of the journey coordinate pins in the tile. True places raised pins on the tile, False doesn't do anything.
 JC_loadFile = 'data' + folderSep + '','journeyCoords.txt'
@@ -63,7 +62,7 @@ SAVE_filename = 'tile{}_r{}_d{}_h{}.stl'
 # The PRINTER variables define the scalings for the hexagons dimensions when they are printed.
 PRINTER_units_per_mm = 1
 PRINTER_desired_radius = 50#40 # in mm, this is how long a side of the hexagon is. Largest diameter, corner to corner is 2x.
-PRINTER_desired_depth = 7#15 # im mm, this is the depth before any topographical displacement is considered.
+PRINTER_desired_depth = 3#7#15 # im mm, this is the depth before any topographical displacement is considered.
 PRINTER_desired_height = 10 # in mm, the desired height ASL that the highest value of all the hexagons will be scaled to.
 PRINTER_sea_depression = -0.5 # in mm, the depression from PRINTER_desired_depth that the sea-designated points (NaN in data) will be dset to.
 
