@@ -25,19 +25,18 @@ import numpy as np
 from stl import mesh
 import imageio as imageio
 
+import os
 
 from topohex import loadData as LD
 from topohex import coordinateTransform as CT
 from topohex import Hexagon as Hexagon
 from topohex import HexGrid as HexGrid
 
-# need a specific folder separation character, as differs between mac and windows
-folderSep = '/'# '\\'
 
 # start by defining all the constants for the program
 NUMHEX = 900
 
-SAVE_folder = 'data' + folderSep + 'models' + folderSep
+SAVE_folder = os.path.join('data','models')
 SAVE_filename = 'tile{}_r{}_d{}_h{}.stl'
 
 
@@ -130,8 +129,16 @@ PRINTER_mm_per_heightunit = PRINTER_desired_height / 2650#3258
 # load in the SRTM data, as standard. We won't downsample (yet)
 print('Loading SRTM data: ',end='')
 
-D1,m1 = LD.load_asc_format('data' + folderSep + 'srtm_35_04' + folderSep + '','srtm_35_04.asc',LOAD_seaVal)
-D2,m2 = LD.load_asc_format('data' + folderSep + 'srtm_36_04' + folderSep + '','srtm_36_04.asc',LOAD_seaVal)
+D1,m1 = LD.load_asc_format(
+    os.path.join('data','srtm_35_04'),
+    'srtm_35_04.asc',
+    LOAD_seaVal
+)
+D2,m2 = LD.load_asc_format(
+    os.path.join('data','srtm_36_04'),
+    'srtm_36_04.asc',
+    LOAD_seaVal
+)
 
 SRTM_D = np.hstack((D1,D2))
 SRTM_x = range(SRTM_D.shape[1])
@@ -153,7 +160,10 @@ Transform = CT.CoordinateTransform(metadata=m1)
 ###################################################################
 
 # extract the path coordinates from the journeyCoords.txt file, and convert them into image space coordinates.
-pathCoords,pathNames = LD.load_coordinate_list('data' + folderSep + '','journeyCoords.txt')
+pathCoords,pathNames = LD.load_coordinate_list(
+    os.path.join('data'),
+    'journeyCoords.txt'
+)
 pathImgCoords = Transform.coords2Img(pathCoords)
 
 radiusFn = lambda x: np.sqrt(np.sum(x*x ,axis = 0))
