@@ -8,13 +8,11 @@ Testing the stl creation
 """
 
 import numpy as np
+import os
 from stl import mesh
 from matplotlib import pyplot as py
 
-import loadData as LD
-import CoordinateTransform as CT
-import Hexagon as Hexagon
-import HexGrid as HexGrid
+from topohex import Hexagon, HexGrid
 
 
 x = np.array(range(500))
@@ -48,4 +46,6 @@ for i, face in enumerate(f.T):
         vec3 = [ *v[:,pos] , HexD[pos] ]
         STL_tile.vectors[i][j] = vec3
         
-STL_tile.save('data\\_stl\\test.stl')
+STL_tile.save(
+    os.path.join('data','_stl','test.stl')
+)

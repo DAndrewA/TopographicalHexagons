@@ -12,7 +12,7 @@ This will give consitency with the hexagons in Hexagon.py
 
 import numpy as np
 import matplotlib.pyplot as plt
-from . import Hexagon as Hex
+from . import Hexagon
 
 hexSize = lambda x: 3 * x * (x+1) if x > -1 else -1
 layerSize = lambda x: 6*x if x else 1
@@ -27,7 +27,7 @@ def layerAlgorithm(targetH,numHexInRadius=3):
     '''
     scale = targetH.scale / numHexInRadius
     rot = targetH.rotation
-    tileH = Hex.Hexagon(scale,rot,[0,0]) # this will create a reduced scale hexagon with the target rotation at the origin
+    tileH = Hexagon(scale,rot,[0,0]) # this will create a reduced scale hexagon with the target rotation at the origin
     
     vertices = np.array([0,0]).reshape((2,1))
     currentVertex = np.array([0,0]).reshape((2,1))
@@ -77,7 +77,17 @@ def layerAlgorithm(targetH,numHexInRadius=3):
     vertices = vertices + targetH.centre
     return vertices, np.array(faces).astype(int)
 
-
+def coerce_to_range(
+    value: np.ndarray, 
+    min: int,
+    max: int
+):
+    '''Coerce values to a range if the value is outside of the range [min, max)'''
+    too_low = value < min
+    too_high = value >= max
+    value[too_low] = min
+    value[too_high] = max-1
+    return value
 
 # this weighting function is made so that x[y] = +-1 gives 0, and x[y] = 0 gives 1
 #wFn = lambda x,y: np.cos(np.pi/2 * x)*np.cos(np.pi/2 * y) 
@@ -102,14 +112,15 @@ def interpolateGrids(v, x, y, D, f=wFn):
     x = np.array(x)
     y = np.array(y)
     print(x.shape)
+    nx,ny = x.size, y.size
     
     
-    xUnder = np.floor(v[0,:]).astype(int)
-    xAbove = np.ceil(v[0,:]).astype(int)
+    xUnder = coerce_to_range( np.floor(v[0,:]).astype(int), 0, nx)
+    xAbove = coerce_to_range( np.ceil(v[0,:]).astype(int), 0, nx)
     print('xUnder shape: {}'.format(xUnder.shape))
     
-    yUnder = np.floor(v[1,:]).astype(int)
-    yAbove = np.ceil(v[1,:]).astype(int)
+    yUnder = coerce_to_range( np.floor(v[1,:]).astype(int), 0, ny)
+    yAbove = coerce_to_range( np.ceil(v[1,:]).astype(int), 0, ny)
     print('yUnder shape: {}'.format(yUnder.shape))
     
     # we've now extracted the values of x and y in the grid adjacent to our hexgrid points
@@ -127,6 +138,99 @@ def interpolateGrids(v, x, y, D, f=wFn):
     HexD = ( weights[0,:]*D_xUyU + weights[1,:]*D_xUyA + weights[2,:]*D_xAyU + weights[3,:]*D_xAyA ) / np.sum(weights,axis=0)
     
     return HexD
+
+
+def interpolate_xy_to_hex_coords(
+    v: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
+    D: np.ndarray,
+) -> np.ndarray:
+    '''Function to interpolate values from a data array D, onto the coordinates described in v, given that D is described over the grid XX,YY
+    
+    INPUTS:
+        v: np.ndarray
+            (2,a) array of x,y pairs of coordinates for vertices in the hexgrid
+            
+        x: np.ndarray
+            (nx,) array of x coordinates that the data exists on.
+            
+        y: np.ndarray
+            (ny,) array of y coordinates that the data exists on.
+            
+        D: np.ndarray
+            (ny, nx) array of data values to be interpolated onto v
+
+    OUTPUTS:
+        HexD: np.ndarray
+            (a,) array of interpolated values from D onto the vertices described in v
+    '''
+    nx = x.size
+    ny = y.size
+    a = v.shape[1]
+    
+    # append new axis to vx and vy to make products with x,y easier
+    vx = v[0,:][...,np.newaxis]
+    vy = v[1,:][...,np.newaxis]
+
+    # inidices of the grid vertex below and to the left of each specified vertex
+    index_x = np.sum(
+        vx > x,
+        axis=1
+    )
+    index_y = np.sum(
+        vy > y,
+        axis=1
+    )
+    # ensure lower indices are within bounds of array D
+    index_x[ index_x >= nx ] = nx-1
+    index_y[ index_y >= ny ] = ny-1
+
+    print('interpolate_xy_to_hex_coords: indices calculated')
+
+    # get values on corners surrounding each vertex
+    #ll = D[
+    #    index_y, index_x
+    #]
+    #lr = D[
+    #    index_y, index_x+1
+    #]
+    #ul = D[
+    #    index_y+1, index_x
+    #]
+    #ur = D[
+    #    index_y+1, index_x+1
+    #]
+    print('interpolate_xy_to_hex_coords: corner D values identified')
+    #xl = x[index_x]
+    #xu = x[index_x+1]
+    #yl = y[index_y]
+    #yu = y[index_y+1]
+
+    # reset dimensionality of vx, vy
+    vx = v[0,:]
+    vy = v[1,:]
+    # bilinear interpolation
+    HexD = np.zeros((a))
+    # HexD += ll * (xu - vx) * (yu - vy)
+    HexD += D[index_y, index_x] * (x[index_x+1] - vx) * (y[index_y+1] - vy)
+    print('HexD ll')
+    #HexD += lr * (vx - xl) * (yu - vy)
+    HexD += D[index_y, index_x+1] * (vx - x[index_x]) * (y[index_y+1] - vy)
+    print('HexD lr')
+    # HexD += ul * (xu - vx) * (vy - yl)
+    HexD += D[index_y+1, index_x] * (x[index_x+1] - vx) * (vy - y[index_y])
+    print('HexD ul')
+    #HexD += ur * (vx - xl) * (vy - yl)
+    HexD += D[ index_y+1, index_x+1] * (vx - x[index_x]) * (vy - y[index_y])
+    print('HexD ur')
+    #HexD = HexD / (xu-xl) / (yu-yl)
+    HexD = HexD / (x[index_x+1] - x[index_x]) / (y[index_y+1] - y[index_y])
+    print('HexD divide')
+
+    print('interpolate_xy_to_hex_coords: HexD calculated')
+    return HexD
+
 
 
       

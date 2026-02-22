@@ -62,7 +62,7 @@ class Hexagon:
         '''
         Function to generate the rotation matrix for the hexagon based on the given angle
         '''
-        theta = self.rotation * np.pi/180 # convert to radians
+        theta = np.deg2rad(self.rotation) # convert to radians
         rotM = np.array([[ np.cos(theta) , -np.sin(theta) ],
                          [ np.sin(theta) , np.cos(theta) ]])
         return rotM

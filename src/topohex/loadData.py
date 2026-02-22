@@ -8,6 +8,7 @@ Will load in the datasets into a desired grid-like format.
 """
 
 import numpy as np
+import os
 import primefac as primefac
 
 
@@ -15,7 +16,7 @@ import primefac as primefac
 This is the function to load in the .asc file format provided by the SRTM dataset.
 '''
 def load_asc_format(direc,filename,seaVal=0):
-    with open(direc + filename,'r') as f:
+    with open( os.path.join(direc, filename),'r') as f:
         try: # wrapped in a try statement so we can always close the file    
             # The initial steps are to extract the metadata from the file
             while True: # This loop will run until we've found the line that starts the data
@@ -40,8 +41,7 @@ def load_asc_format(direc,filename,seaVal=0):
             metadata = [xll,yll,cellsize] # long,lat,scale
             #We have now reached the first line with data in it.
             # initialising numpy arrays
-            dataArr = np.zeros([ncols,nrows])
-            
+            dataArr = np.zeros([nrows,ncols])
             # now implement a do-while loop, as we know we can run the first itteration
             lineIndex = 0
             while True:
@@ -104,7 +104,7 @@ def load_coordinate_list(direc,filename,commentChar='#'):
     '''
     names = []
     coords = []
-    f = open(direc + filename,'r')
+    f = open(os.path.join(direc, filename),'r')
     try:
         while True: # will go through the whole file, line by line
             line = f.readline()
